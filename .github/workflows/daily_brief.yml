@@ -1,9 +1,9 @@
-name: Weekly Morning Brief
+name: Daily Morning Brief
 
 on:
   schedule:
-    - cron: "0 7 * * 3"
-    - cron: "0 8 * * 3"
+    - cron: "0 7 * * *"
+    - cron: "0 8 * * *"
   workflow_dispatch:
 
 jobs:
@@ -33,7 +33,7 @@ jobs:
         id: london-time
         if: github.event_name == 'schedule'
         run: |
-          if [ "$(TZ=Europe/London date +'%u %H')" = "3 08" ]; then
+          if [ "$(TZ=Europe/London date +'%H')" = "08" ]; then
             echo "should_send=true" >> "$GITHUB_OUTPUT"
           else
             echo "should_send=false" >> "$GITHUB_OUTPUT"

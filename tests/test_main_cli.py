@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from zoneinfo import ZoneInfo
 from unittest.mock import patch
 
 from newsbot.config import ArxivSource
@@ -42,6 +43,30 @@ def test_dry_run_not_send(mock_cfg, mock_fetch, mock_send, monkeypatch, capsys):
     assert rc == 0
     assert "中文早间新闻简报" in out
     mock_send.assert_not_called()
+
+
+@patch("main.send_message")
+@patch("main.fetch_all")
+@patch("main.load_config")
+def test_default_cap_10_items(mock_cfg, mock_fetch, mock_send, monkeypatch):
+    import main
+
+    class Cfg:
+        sources = []
+        telegram_bot_token = "token"
+        telegram_chat_id = "chat"
+
+    mock_cfg.return_value = Cfg()
+    mock_fetch.return_value = _items(12)
+    monkeypatch.setattr("sys.argv", ["main.py"])
+    monkeypatch.setattr(main, "should_include_arxiv", lambda: False)
+
+    rc = main.run()
+
+    assert rc == 0
+    sent_text = mock_send.call_args.args[2]
+    assert "10." in sent_text
+    assert "11." not in sent_text
 
 
 @patch("main.send_message")
@@ -100,6 +125,11 @@ def test_arxiv_sources_included(mock_cfg, mock_fetch, mock_fetch_arxiv, mock_sen
         )
     ]
     monkeypatch.setattr("sys.argv", ["main.py"])
+    monkeypatch.setattr(
+        main,
+        "should_include_arxiv",
+        lambda: True,
+    )
 
     rc = main.run()
 
@@ -108,3 +138,49 @@ def test_arxiv_sources_included(mock_cfg, mock_fetch, mock_fetch_arxiv, mock_sen
     sent_text = mock_send.call_args.args[2]
     assert "📚 每周 arXiv / Active Matter 论文" in sent_text
     assert "Active matter paper" in sent_text
+
+
+@patch("main.send_message")
+@patch("main.fetch_all_arxiv")
+@patch("main.fetch_all")
+@patch("main.load_config")
+def test_arxiv_sources_skipped_on_non_wednesday(mock_cfg, mock_fetch, mock_fetch_arxiv, mock_send, monkeypatch):
+    import main
+
+    class Cfg:
+        sources = []
+        arxiv_sources = [
+            ArxivSource(
+                name="arXiv Active Matter",
+                keywords=["active matter"],
+                categories=["cond-mat.soft"],
+            )
+        ]
+        telegram_bot_token = "token"
+        telegram_chat_id = "chat"
+
+    mock_cfg.return_value = Cfg()
+    mock_fetch.return_value = []
+    monkeypatch.setattr("sys.argv", ["main.py"])
+    monkeypatch.setattr(
+        main,
+        "should_include_arxiv",
+        lambda: False,
+    )
+
+    rc = main.run()
+
+    assert rc == 0
+    mock_fetch_arxiv.assert_not_called()
+    sent_text = mock_send.call_args.args[2]
+    assert "📚 每周 arXiv / Active Matter 论文" not in sent_text
+
+
+def test_should_include_arxiv_only_on_london_wednesday():
+    import main
+
+    wednesday = datetime(2026, 5, 20, 8, 0, tzinfo=ZoneInfo("Europe/London"))
+    thursday = datetime(2026, 5, 21, 8, 0, tzinfo=ZoneInfo("Europe/London"))
+
+    assert main.should_include_arxiv(wednesday) is True
+    assert main.should_include_arxiv(thursday) is False
