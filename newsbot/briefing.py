@@ -43,7 +43,43 @@ def _top_category(items: list[NewsItem]) -> str:
     return counter.most_common(1)[0][0]
 
 
-def build_briefing(items: list[NewsItem], test_mode: bool = False) -> str:
+def _truncate_chars(text: str, limit: int = 300) -> str:
+    normalized = " ".join(text.split())
+    if len(normalized) <= limit:
+        return normalized
+    return normalized[:limit]
+
+
+def _format_authors(authors: list[str] | None) -> str:
+    if not authors:
+        return "未知"
+    return ", ".join(authors[:2])
+
+
+def _append_arxiv_section(lines: list[str], papers: list[NewsItem], test_mode: bool) -> None:
+    lines.extend(["", "📚 每周 arXiv / Active Matter 论文", ""])
+    if not papers:
+        lines.append("过去一周内没有检索到 active matter 相关 arXiv 论文。")
+        return
+
+    for idx, paper in enumerate(papers, start=1):
+        title = f"【测试】{paper.title}" if test_mode else paper.title
+        lines.extend(
+            [
+                f"{idx}. {title}",
+                f"   作者：{_format_authors(paper.authors)}",
+                f"   摘要：{_truncate_chars(paper.summary)}",
+                f"   {paper.link}",
+                "",
+            ]
+        )
+
+
+def build_briefing(
+    items: list[NewsItem],
+    test_mode: bool = False,
+    arxiv_papers: list[NewsItem] | None = None,
+) -> str:
     date_text = datetime.now().strftime("%Y-%m-%d")
     header = f"{'【测试】' if test_mode else ''}中文早间新闻简报（{date_text}）"
 
@@ -74,5 +110,8 @@ def build_briefing(items: list[NewsItem], test_mode: bool = False) -> str:
                 "",
             ]
         )
+
+    if arxiv_papers is not None:
+        _append_arxiv_section(lines, arxiv_papers, test_mode)
 
     return "\n".join(lines).strip()

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 
+from newsbot.arxiv_client import fetch_all_arxiv, select_latest_arxiv
 from newsbot.briefing import build_briefing
 from newsbot.config import load_config, require_telegram_env
 from newsbot.rss_client import fetch_all
@@ -27,7 +28,12 @@ def run() -> int:
 
     max_items = min(args.max_items, 3) if args.test else args.max_items
     selected = select_items(items, max_items=max_items)
-    message = build_briefing(selected, test_mode=args.test)
+
+    arxiv_sources = getattr(cfg, "arxiv_sources", [])
+    arxiv_items = fetch_all_arxiv(arxiv_sources) if arxiv_sources else []
+    arxiv_selected = select_latest_arxiv(arxiv_items, max_items=5)
+
+    message = build_briefing(selected, test_mode=args.test, arxiv_papers=arxiv_selected)
 
     if args.dry_run:
         print(message)

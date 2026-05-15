@@ -5,3 +5,33 @@ sources:
     url: https://feeds.reuters.com/Reuters/worldNews
   - name: NPR World
     url: https://feeds.npr.org/1004/rss.xml
+
+arxiv_sources:
+  - name: arXiv Active Matter
+    max_results: 5
+    keywords:
+      - active matter
+      - active particle
+      - active particles
+      - active Brownian
+      - active Ornstein-Uhlenbeck
+      - AOUP
+      - run-and-tumble
+      - self-propelled
+      - motility-induced
+      - MIPS
+      - swim pressure
+      - microswimmer
+      - active nematics
+      - flocking
+      - Vicsek
+    categories:
+      - cond-mat.soft
+      - cond-mat.stat-mech
+      - physics.bio-ph
+      - physics.flu-dyn
+      - nlin.AO
+      - math-ph
+      - math.AP
+      - math.DS
+      - math.PR

@@ -12,3 +12,4 @@ class NewsItem:
     published_at: datetime | None
     categories: list[str]
     source: str
+    authors: list[str] | None = None
