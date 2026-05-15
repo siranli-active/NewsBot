@@ -14,8 +14,14 @@ def send_message(token: str, chat_id: str, text: str) -> None:
         },
         timeout=20,
     )
+    try:
+        data = resp.json()
+    except ValueError:
+        data = {}
+    description = data.get("description") if isinstance(data, dict) else None
+    detail = f": {description}" if description else ""
+
     if resp.status_code != 200:
-        raise RuntimeError(f"Telegram 发送失败，HTTP {resp.status_code}")
-    data = resp.json()
+        raise RuntimeError(f"Telegram 发送失败，HTTP {resp.status_code}{detail}")
     if not data.get("ok"):
-        raise RuntimeError("Telegram 发送失败，接口返回 ok=false")
+        raise RuntimeError(f"Telegram 发送失败，接口返回 ok=false{detail}")
