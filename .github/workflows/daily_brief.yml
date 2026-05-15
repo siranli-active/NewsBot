@@ -2,8 +2,8 @@ name: Daily Morning Brief
 
 on:
   schedule:
-    - cron: "0 7 * * *"
     - cron: "0 8 * * *"
+      timezone: "Europe/London"
   workflow_dispatch:
 
 jobs:
@@ -28,15 +28,6 @@ jobs:
 
       - name: Run tests
         run: pytest -q
-
-      - name: Check London 08:00 gate
-        if: github.event_name == 'schedule'
-        run: |
-          hour=$(TZ='Europe/London' date +%H)
-          if [ "$hour" != "08" ]; then
-            echo "Not 08:00 in Europe/London, skip."
-            exit 0
-          fi
 
       - name: Send morning brief
         run: python main.py
