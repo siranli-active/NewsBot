@@ -48,13 +48,15 @@ def fetch_source(source: Source) -> list[NewsItem]:
         summary = str(entry.get("summary") or entry.get("description") or "").strip()
         if not title or not link:
             continue
+        feed_categories = _extract_categories(entry)
+        categories = [source.category, *[cat for cat in feed_categories if cat != source.category]]
         items.append(
             NewsItem(
                 title=title,
                 link=link,
                 summary=summary,
                 published_at=_parse_published(entry),
-                categories=_extract_categories(entry),
+                categories=categories,
                 source=source.name,
             )
         )

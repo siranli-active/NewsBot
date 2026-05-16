@@ -1,10 +1,40 @@
 sources:
-  - name: BBC World
-    url: https://feeds.bbci.co.uk/news/world/rss.xml
-  - name: Reuters World News
-    url: https://feeds.reuters.com/Reuters/worldNews
-  - name: NPR World
-    url: https://feeds.npr.org/1004/rss.xml
+  - name: FT中文网
+    category: 财经
+    url: http://www.ftchinese.com/rss/feed
+  - name: 华尔街日报中文网
+    category: 财经
+    url: https://cn.wsj.com/zh-hans/rss
+  - name: BBC中文网
+    category: 时政
+    url: https://feeds.bbci.co.uk/zhongwen/simp/rss.xml
+  - name: TechCrunch
+    category: AI科技
+    url: https://techcrunch.com/category/artificial-intelligence/feed/
+  - name: VentureBeat
+    category: AI科技
+    url: https://venturebeat.com/category/ai/feed/
+  - name: Ars Technica
+    category: AI科技
+    url: https://feeds.arstechnica.com/arstechnica/index
+  - name: ifanr
+    category: AI科技
+    url: https://www.ifanr.com/feed
+  - name: UKHSA
+    category: 医疗卫生
+    url: https://ukhsa.blog.gov.uk/feed/
+  - name: WHO
+    category: 医疗卫生
+    url: https://www.who.int/rss-feeds/news-chinese.xml
+  - name: ECDC
+    category: 医疗卫生
+    url: https://www.ecdc.europa.eu/en/taxonomy/term/1505/feed
+  - name: Solidot
+    category: 自然科学
+    url: https://www.solidot.org/index.rss
+  - name: Nature
+    category: 自然科学
+    url: https://www.nature.com/nature.rss
 
 arxiv_sources:
   - name: arXiv Active Matter

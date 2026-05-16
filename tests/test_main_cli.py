@@ -15,7 +15,7 @@ def _items(n: int) -> list[NewsItem]:
             link=f"u{i}",
             summary="s",
             published_at=datetime(2026, 5, 14, 8, 0, tzinfo=timezone.utc),
-            categories=["Tech"],
+            categories=["AI科技"],
             source="src",
         )
         for i in range(n)
@@ -48,7 +48,7 @@ def test_dry_run_not_send(mock_cfg, mock_fetch, mock_send, monkeypatch, capsys):
 @patch("main.send_message")
 @patch("main.fetch_all")
 @patch("main.load_config")
-def test_default_cap_10_items(mock_cfg, mock_fetch, mock_send, monkeypatch):
+def test_default_cap_18_items(mock_cfg, mock_fetch, mock_send, monkeypatch):
     import main
 
     class Cfg:
@@ -57,7 +57,7 @@ def test_default_cap_10_items(mock_cfg, mock_fetch, mock_send, monkeypatch):
         telegram_chat_id = "chat"
 
     mock_cfg.return_value = Cfg()
-    mock_fetch.return_value = _items(12)
+    mock_fetch.return_value = _items(20)
     monkeypatch.setattr("sys.argv", ["main.py"])
     monkeypatch.setattr(main, "should_include_arxiv", lambda: False)
 
@@ -65,8 +65,8 @@ def test_default_cap_10_items(mock_cfg, mock_fetch, mock_send, monkeypatch):
 
     assert rc == 0
     sent_text = mock_send.call_args.args[2]
-    assert "10." in sent_text
-    assert "11." not in sent_text
+    assert "18." in sent_text
+    assert "19." not in sent_text
 
 
 @patch("main.send_message")

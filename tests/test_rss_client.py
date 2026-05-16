@@ -27,10 +27,10 @@ def test_fetch_source_extracts_fields(mock_parse):
 
     mock_parse.return_value = Feed()
 
-    out = fetch_source(Source(name="n", url="https://x"))
+    out = fetch_source(Source(name="n", url="https://x", category="AI科技"))
     assert len(out) == 2
     assert out[0].summary == "s1"
     assert out[0].published_at == datetime(2026, 5, 14, 6, 0, tzinfo=timezone.utc)
-    assert out[0].categories == ["Tech"]
+    assert out[0].categories == ["AI科技", "Tech"]
     assert out[1].summary == "d2"
     assert out[1].published_at is None

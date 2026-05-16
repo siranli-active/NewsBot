@@ -21,7 +21,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--test", action="store_true", help="测试模式：最多发送3条，标题加【测试】")
     parser.add_argument("--dry-run", action="store_true", help="只打印，不发送 Telegram")
-    parser.add_argument("--max-items", type=int, default=10, help="最多发送多少条新闻")
+    parser.add_argument("--max-items", type=int, default=18, help="最多发送多少条新闻")
     return parser.parse_args()
 
 

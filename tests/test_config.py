@@ -11,6 +11,7 @@ def test_load_config_sources_only(tmp_path, monkeypatch) -> None:
         """
 sources:
   - name: Example
+    category: 财经
     url: https://example.com/rss.xml
 """.strip(),
         encoding="utf-8",
@@ -21,6 +22,7 @@ sources:
     cfg = load_config(str(path))
 
     assert cfg.sources[0].name == "Example"
+    assert cfg.sources[0].category == "财经"
     assert cfg.arxiv_sources == []
 
 
@@ -30,6 +32,7 @@ def test_load_config_arxiv_sources(tmp_path) -> None:
         """
 sources:
   - name: Example
+    category: 财经
     url: https://example.com/rss.xml
 arxiv_sources:
   - name: arXiv Active Matter
@@ -50,12 +53,44 @@ arxiv_sources:
     assert source.max_results == 5
 
 
+def test_load_config_invalid_source_category(tmp_path) -> None:
+    path = tmp_path / "sources.yml"
+    path.write_text(
+        """
+sources:
+  - name: Example
+    category: 体育
+    url: https://example.com/rss.xml
+""".strip(),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="source.category"):
+        load_config(str(path))
+
+
+def test_load_config_missing_source_category(tmp_path) -> None:
+    path = tmp_path / "sources.yml"
+    path.write_text(
+        """
+sources:
+  - name: Example
+    url: https://example.com/rss.xml
+""".strip(),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="category"):
+        load_config(str(path))
+
+
 def test_load_config_invalid_arxiv_sources(tmp_path) -> None:
     path = tmp_path / "sources.yml"
     path.write_text(
         """
 sources:
   - name: Example
+    category: 财经
     url: https://example.com/rss.xml
 arxiv_sources:
   - name: arXiv Active Matter

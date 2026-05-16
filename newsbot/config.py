@@ -6,10 +6,16 @@ from dataclasses import dataclass
 import yaml
 
 
+NEWS_CATEGORIES = ["财经", "时政", "AI科技", "医疗卫生", "自然科学"]
+COMBINED_CATEGORY_LIMIT = 4
+COMBINED_LIMITED_CATEGORIES = {"医疗卫生", "自然科学"}
+
+
 @dataclass
 class Source:
     name: str
     url: str
+    category: str
 
 
 @dataclass
@@ -56,9 +62,13 @@ def _parse_sources(data: dict) -> list[Source]:
             raise ValueError("sources 列表项必须是对象")
         name = str(item.get("name", "")).strip()
         url = str(item.get("url", "")).strip()
-        if not name or not url:
-            raise ValueError("每个 source 必须包含 name 和 url")
-        sources.append(Source(name=name, url=url))
+        category = str(item.get("category", "")).strip()
+        if not name or not url or not category:
+            raise ValueError("每个 source 必须包含 name、url 和 category")
+        if category not in NEWS_CATEGORIES:
+            allowed = ", ".join(NEWS_CATEGORIES)
+            raise ValueError(f"source.category 必须是以下之一：{allowed}")
+        sources.append(Source(name=name, url=url, category=category))
     return sources
 
 

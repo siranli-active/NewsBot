@@ -3,10 +3,18 @@ from __future__ import annotations
 from collections import Counter
 from datetime import datetime
 
+from newsbot.config import NEWS_CATEGORIES
 from newsbot.models import NewsItem
 
 
 FALLBACK_SUMMARY = "该新闻主要内容可参考原标题与原文链接。"
+CATEGORY_EMOJIS = {
+    "财经": "💰",
+    "时政": "🏛️",
+    "AI科技": "🤖",
+    "医疗卫生": "🏥",
+    "自然科学": "🔬",
+}
 
 
 def _truncate_to_two_sentences(text: str) -> str:
@@ -32,12 +40,19 @@ def _truncate_to_two_sentences(text: str) -> str:
     return " ".join(parts[:2])
 
 
+def _primary_category(item: NewsItem) -> str:
+    for category in item.categories:
+        if category in NEWS_CATEGORIES:
+            return category
+    return "综合"
+
+
 def _top_category(items: list[NewsItem]) -> str:
     counter: Counter[str] = Counter()
     for item in items:
-        for cat in item.categories:
-            if cat.strip():
-                counter[cat.strip()] += 1
+        category = _primary_category(item)
+        if category != "综合":
+            counter[category] += 1
     if not counter:
         return "综合"
     return counter.most_common(1)[0][0]
@@ -99,17 +114,51 @@ def build_briefing(
         "新闻列表",
     ]
 
-    for idx, item in enumerate(items, start=1):
-        title = f"【测试】{item.title}" if test_mode else item.title
-        summary = _truncate_to_two_sentences(item.summary)
-        lines.extend(
-            [
-                f"{idx}. {title}",
-                f"   {summary}",
-                f"   {item.link}",
-                "",
-            ]
-        )
+    grouped: dict[str, list[NewsItem]] = {category: [] for category in NEWS_CATEGORIES}
+    other_items: list[NewsItem] = []
+    for item in items:
+        category = _primary_category(item)
+        if category in grouped:
+            grouped[category].append(item)
+        else:
+            other_items.append(item)
+
+    idx = 1
+    for category in NEWS_CATEGORIES:
+        category_items = grouped[category]
+        if not category_items:
+            continue
+        lines.extend(["", f"{CATEGORY_EMOJIS[category]} {category}"])
+        for item in category_items:
+            title = f"【测试】{item.title}" if test_mode else item.title
+            summary = _truncate_to_two_sentences(item.summary)
+            lines.extend(
+                [
+                    f"{idx}. {title}",
+                    f"   {summary}",
+                    f"   {item.link}",
+                    "",
+                ]
+            )
+            idx += 1
+
+    if other_items:
+        lines.extend(["", "🗞️ 综合"])
+        for item in other_items:
+            title = f"【测试】{item.title}" if test_mode else item.title
+            summary = _truncate_to_two_sentences(item.summary)
+            lines.extend(
+                [
+                    f"{idx}. {title}",
+                    f"   {summary}",
+                    f"   {item.link}",
+                    "",
+                ]
+            )
+            idx += 1
+
+    if idx == 1:
+        lines.append("暂无可用新闻")
 
     if arxiv_papers is not None:
         _append_arxiv_section(lines, arxiv_papers, test_mode)

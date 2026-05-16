@@ -19,18 +19,24 @@ def _item(title: str, summary: str, categories: list[str]) -> NewsItem:
 
 def test_briefing_focus_and_top3_titles() -> None:
     items = [
-        _item("A", "句子一。句子二。句子三。", ["Tech"]),
-        _item("B", "Only one sentence", ["Tech"]),
-        _item("C", "", ["World"]),
+        _item("A", "句子一。句子二。句子三。", ["AI科技"]),
+        _item("B", "Only one sentence", ["AI科技"]),
+        _item("C", "", ["财经"]),
     ]
     text = build_briefing(items)
-    assert "重点方向：Tech" in text
+    assert "重点方向：AI科技" in text
+    assert "💰 财经" in text
+    assert "🤖 AI科技" in text
+    assert "🏛️ 时政" not in text
+    assert "1. C" in text
+    assert "2. A" in text
+    assert "3. B" in text
     assert "- A" in text and "- B" in text and "- C" in text
     assert FALLBACK_SUMMARY in text
 
 
 def test_briefing_test_mode_prefix() -> None:
-    items = [_item("A", "Hello world.", ["Tech"])]
+    items = [_item("A", "Hello world.", ["AI科技"])]
     text = build_briefing(items, test_mode=True)
     assert "【测试】中文早间新闻简报" in text
     assert "1. 【测试】A" in text
