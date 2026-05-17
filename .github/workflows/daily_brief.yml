@@ -2,8 +2,7 @@ name: Daily Morning Brief
 
 on:
   schedule:
-    - cron: "17 7 * * *"
-    - cron: "17 8 * * *"
+    - cron: "*/5 * * * *"
   workflow_dispatch:
 
 jobs:
