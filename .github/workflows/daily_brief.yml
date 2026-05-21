@@ -2,11 +2,14 @@ name: Daily Morning Brief
 
 on:
   schedule:
-    - cron: "7 5 * * *"
-    - cron: "23 6 * * *"
-    - cron: "41 7 * * *"
+    - cron: "26 7 * * *"
     - cron: "13 8 * * *"
   workflow_dispatch:
+    inputs:
+      source:
+        description: "Trigger source"
+        required: false
+        default: "manual"
 
 concurrency:
   group: daily-morning-brief-${{ github.ref }}
@@ -46,24 +49,24 @@ jobs:
 
       - name: Restore sent marker
         id: sent-marker
-        if: github.event_name == 'schedule'
+        if: github.event_name == 'schedule' || github.event.inputs.source == 'cloudflare'
         uses: actions/cache/restore@v4
         with:
           path: .sent-marker
           key: morning-brief-${{ steps.send-date.outputs.date }}
 
       - name: Send morning brief
-        if: github.event_name == 'workflow_dispatch' || steps.sent-marker.outputs.cache-hit != 'true'
+        if: (github.event_name == 'workflow_dispatch' && github.event.inputs.source != 'cloudflare') || steps.sent-marker.outputs.cache-hit != 'true'
         run: python main.py
 
       - name: Write sent marker
-        if: github.event_name == 'schedule' && steps.sent-marker.outputs.cache-hit != 'true'
+        if: (github.event_name == 'schedule' || github.event.inputs.source == 'cloudflare') && steps.sent-marker.outputs.cache-hit != 'true'
         run: |
           mkdir -p .sent-marker
           date -u > ".sent-marker/${{ steps.send-date.outputs.date }}"
 
       - name: Save sent marker
-        if: github.event_name == 'schedule' && steps.sent-marker.outputs.cache-hit != 'true'
+        if: (github.event_name == 'schedule' || github.event.inputs.source == 'cloudflare') && steps.sent-marker.outputs.cache-hit != 'true'
         uses: actions/cache/save@v4
         with:
           path: .sent-marker

@@ -12,6 +12,9 @@ export default {
         },
         body: JSON.stringify({
           ref: "main",
+          inputs: {
+            source: "cloudflare",
+          },
         }),
       }
     );
