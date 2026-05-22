@@ -40,9 +40,11 @@ def parse_args() -> argparse.Namespace:
 def _build_personalized_briefing(cfg: object, candidates: list, max_items: int) -> PersonalizedBriefing | None:
     api_key = getattr(cfg, "deepseek_api_key", None)
     if not api_key:
+        print("DeepSeek personalization skipped: DEEPSEEK_API_KEY is not set")
         return None
     try:
-        profile_summary = load_minimized_profile(getattr(cfg, "profile_xml_path", "profile.xml"))
+        profile_path = getattr(cfg, "profile_xml_path", "profile.xml")
+        profile_summary = load_minimized_profile(profile_path)
         briefing = personalize_news(
             api_key=api_key,
             api_base=getattr(cfg, "deepseek_api_base"),
@@ -52,9 +54,17 @@ def _build_personalized_briefing(cfg: object, candidates: list, max_items: int) 
             final_count=max_items,
             min_counts=MIN_FINAL_CATEGORY_COUNTS,
         )
-    except (OSError, ET.ParseError, DeepSeekError):
+    except OSError as exc:
+        print(f"DeepSeek personalization skipped: could not read profile file ({exc.__class__.__name__})")
+        return None
+    except ET.ParseError:
+        print("DeepSeek personalization skipped: profile XML is invalid")
+        return None
+    except DeepSeekError as exc:
+        print(f"DeepSeek personalization skipped: {exc}")
         return None
 
+    print(f"DeepSeek personalization used: {len(briefing.items)} items returned")
     selected = enforce_category_requirements(
         briefing.items,
         [item.item for item in briefing.items],
