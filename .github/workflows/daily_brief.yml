@@ -1,9 +1,6 @@
 name: Daily Morning Brief
 
 on:
-  schedule:
-    - cron: "26 7 * * *"
-    - cron: "13 8 * * *"
   workflow_dispatch:
     inputs:
       source:
@@ -21,6 +18,7 @@ jobs:
     env:
       TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
       TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+      DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -49,7 +47,7 @@ jobs:
 
       - name: Restore sent marker
         id: sent-marker
-        if: github.event_name == 'schedule' || github.event.inputs.source == 'cloudflare'
+        if: github.event.inputs.source == 'cloudflare'
         uses: actions/cache/restore@v4
         with:
           path: .sent-marker
@@ -60,13 +58,13 @@ jobs:
         run: python main.py
 
       - name: Write sent marker
-        if: (github.event_name == 'schedule' || github.event.inputs.source == 'cloudflare') && steps.sent-marker.outputs.cache-hit != 'true'
+        if: github.event.inputs.source == 'cloudflare' && steps.sent-marker.outputs.cache-hit != 'true'
         run: |
           mkdir -p .sent-marker
           date -u > ".sent-marker/${{ steps.send-date.outputs.date }}"
 
       - name: Save sent marker
-        if: (github.event_name == 'schedule' || github.event.inputs.source == 'cloudflare') && steps.sent-marker.outputs.cache-hit != 'true'
+        if: github.event.inputs.source == 'cloudflare' && steps.sent-marker.outputs.cache-hit != 'true'
         uses: actions/cache/save@v4
         with:
           path: .sent-marker

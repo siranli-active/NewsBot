@@ -18,12 +18,44 @@ sources:
     )
     monkeypatch.delenv("TELEGRAM_BOT_TOKEN", raising=False)
     monkeypatch.delenv("TELEGRAM_CHAT_ID", raising=False)
+    monkeypatch.delenv("DEEPSEEK_API_KEY", raising=False)
+    monkeypatch.delenv("DEEPSEEK_API_BASE", raising=False)
+    monkeypatch.delenv("DEEPSEEK_MODEL", raising=False)
+    monkeypatch.delenv("PROFILE_XML_PATH", raising=False)
 
     cfg = load_config(str(path))
 
     assert cfg.sources[0].name == "Example"
     assert cfg.sources[0].category == "财经"
     assert cfg.arxiv_sources == []
+    assert cfg.deepseek_api_key is None
+    assert cfg.deepseek_api_base == "https://api.deepseek.com"
+    assert cfg.deepseek_model == "deepseek-chat"
+    assert cfg.profile_xml_path == "profile.xml"
+
+
+def test_load_config_deepseek_env(tmp_path, monkeypatch) -> None:
+    path = tmp_path / "sources.yml"
+    path.write_text(
+        """
+sources:
+  - name: Example
+    category: 财经
+    url: https://example.com/rss.xml
+""".strip(),
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("DEEPSEEK_API_KEY", "key")
+    monkeypatch.setenv("DEEPSEEK_API_BASE", "https://deepseek.example")
+    monkeypatch.setenv("DEEPSEEK_MODEL", "model")
+    monkeypatch.setenv("PROFILE_XML_PATH", "custom-profile.xml")
+
+    cfg = load_config(str(path))
+
+    assert cfg.deepseek_api_key == "key"
+    assert cfg.deepseek_api_base == "https://deepseek.example"
+    assert cfg.deepseek_model == "model"
+    assert cfg.profile_xml_path == "custom-profile.xml"
 
 
 def test_load_config_arxiv_sources(tmp_path) -> None:

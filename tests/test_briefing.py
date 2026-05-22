@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 
 from newsbot.briefing import FALLBACK_SUMMARY, build_briefing
-from newsbot.models import NewsItem
+from newsbot.models import NewsItem, PersonalizedNewsItem
 
 
 def _item(title: str, summary: str, categories: list[str]) -> NewsItem:
@@ -17,22 +17,47 @@ def _item(title: str, summary: str, categories: list[str]) -> NewsItem:
     )
 
 
-def test_briefing_focus_and_top3_titles() -> None:
+def test_briefing_focus_and_sections() -> None:
     items = [
         _item("A", "句子一。句子二。句子三。", ["AI科技"]),
         _item("B", "Only one sentence", ["AI科技"]),
         _item("C", "", ["财经"]),
     ]
     text = build_briefing(items)
-    assert "重点方向：AI科技" in text
+    assert "重点方向：" in text
+    assert "重点关注：" not in text
+    assert "- 财经" in text
+    assert "- AI科技" in text
     assert "💰 财经" in text
     assert "🤖 AI科技" in text
     assert "🏛️ 时政" not in text
     assert "1. C" in text
     assert "2. A" in text
     assert "3. B" in text
-    assert "- A" in text and "- B" in text and "- C" in text
     assert FALLBACK_SUMMARY in text
+
+
+def test_briefing_personalized_fields() -> None:
+    item = PersonalizedNewsItem(
+        item=_item("English title", "English summary.", ["AI科技", "医疗卫生"]),
+        translated_title="中文标题",
+        translated_summary="中文摘要。",
+        importance_reason="与持仓相关",
+        display_category="医疗卫生",
+    )
+
+    text = build_briefing(
+        [item],
+        focus_directions={"医疗卫生": ["基于画像的医疗方向"]},
+    )
+
+    assert "- 医疗卫生：基于画像的医疗方向" in text
+    assert "重点关注：" not in text
+    assert "🏥 医疗卫生" in text
+    assert "🤖 AI科技" not in text
+    assert "1. 中文标题" in text
+    assert "中文摘要。" in text
+    assert "关注理由：与持仓相关" in text
 
 
 def test_briefing_test_mode_prefix() -> None:

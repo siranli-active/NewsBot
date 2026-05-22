@@ -7,8 +7,13 @@ import yaml
 
 
 NEWS_CATEGORIES = ["财经", "时政", "AI科技", "医疗卫生", "自然科学"]
-COMBINED_CATEGORY_LIMIT = 4
-COMBINED_LIMITED_CATEGORIES = {"医疗卫生", "自然科学"}
+DEFAULT_CANDIDATE_ITEMS = 30
+DEFAULT_FINAL_ITEMS = 15
+REQUIRED_FINAL_CATEGORY_COUNTS = {"医疗卫生": 2, "自然科学": 2}
+MIN_FINAL_CATEGORY_COUNTS = {"财经": 1, "时政": 1, "AI科技": 1, "医疗卫生": 2, "自然科学": 2}
+DEFAULT_DEEPSEEK_API_BASE = "https://api.deepseek.com"
+DEFAULT_DEEPSEEK_MODEL = "deepseek-chat"
+DEFAULT_PROFILE_XML_PATH = "profile.xml"
 
 
 @dataclass
@@ -32,6 +37,10 @@ class AppConfig:
     arxiv_sources: list[ArxivSource]
     telegram_bot_token: str | None
     telegram_chat_id: str | None
+    deepseek_api_key: str | None
+    deepseek_api_base: str
+    deepseek_model: str
+    profile_xml_path: str
 
 
 def _load_yaml(path: str) -> dict:
@@ -113,6 +122,10 @@ def load_config(path: str = "sources.yml") -> AppConfig:
         arxiv_sources=_parse_arxiv_sources(data),
         telegram_bot_token=os.getenv("TELEGRAM_BOT_TOKEN"),
         telegram_chat_id=os.getenv("TELEGRAM_CHAT_ID"),
+        deepseek_api_key=os.getenv("DEEPSEEK_API_KEY"),
+        deepseek_api_base=os.getenv("DEEPSEEK_API_BASE", DEFAULT_DEEPSEEK_API_BASE),
+        deepseek_model=os.getenv("DEEPSEEK_MODEL", DEFAULT_DEEPSEEK_MODEL),
+        profile_xml_path=os.getenv("PROFILE_XML_PATH", DEFAULT_PROFILE_XML_PATH),
     )
 
 

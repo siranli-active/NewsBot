@@ -1,10 +1,9 @@
 from __future__ import annotations
 
-from collections import Counter
 from datetime import datetime
 
 from newsbot.config import NEWS_CATEGORIES
-from newsbot.models import NewsItem
+from newsbot.models import NewsItem, PersonalizedNewsItem
 
 
 FALLBACK_SUMMARY = "该新闻主要内容可参考原标题与原文链接。"
@@ -40,22 +39,18 @@ def _truncate_to_two_sentences(text: str) -> str:
     return " ".join(parts[:2])
 
 
-def _primary_category(item: NewsItem) -> str:
-    for category in item.categories:
+def _base_item(item: NewsItem | PersonalizedNewsItem) -> NewsItem:
+    return item.item if isinstance(item, PersonalizedNewsItem) else item
+
+
+def _primary_category(item: NewsItem | PersonalizedNewsItem) -> str:
+    if isinstance(item, PersonalizedNewsItem) and item.display_category in NEWS_CATEGORIES:
+        return item.display_category
+    base = _base_item(item)
+    for category in base.categories:
         if category in NEWS_CATEGORIES:
             return category
     return "综合"
-
-
-def _top_category(items: list[NewsItem]) -> str:
-    counter: Counter[str] = Counter()
-    for item in items:
-        category = _primary_category(item)
-        if category != "综合":
-            counter[category] += 1
-    if not counter:
-        return "综合"
-    return counter.most_common(1)[0][0]
 
 
 def _truncate_chars(text: str, limit: int = 300) -> str:
@@ -90,32 +85,47 @@ def _append_arxiv_section(lines: list[str], papers: list[NewsItem], test_mode: b
         )
 
 
+def _display_title(item: NewsItem | PersonalizedNewsItem, test_mode: bool) -> str:
+    base = _base_item(item)
+    title = item.translated_title if isinstance(item, PersonalizedNewsItem) and item.translated_title else base.title
+    return f"【测试】{title}" if test_mode else title
+
+
+def _display_summary(item: NewsItem | PersonalizedNewsItem) -> str:
+    base = _base_item(item)
+    summary = item.translated_summary if isinstance(item, PersonalizedNewsItem) and item.translated_summary else base.summary
+    return _truncate_to_two_sentences(summary)
+
+
 def build_briefing(
-    items: list[NewsItem],
+    items: list[NewsItem | PersonalizedNewsItem],
     test_mode: bool = False,
     arxiv_papers: list[NewsItem] | None = None,
+    focus_directions: dict[str, list[str]] | None = None,
 ) -> str:
     date_text = datetime.now().strftime("%Y-%m-%d")
     header = f"{'【测试】' if test_mode else ''}中文早间新闻简报（{date_text}）"
 
-    top_category = _top_category(items)
-    focus_titles = [f"- {i.title}" for i in items[:3]]
-    if not focus_titles:
-        focus_titles = ["- 暂无可用新闻"]
+    directions = []
+    for category in NEWS_CATEGORIES:
+        for direction in (focus_directions or {}).get(category, []):
+            directions.append(f"- {category}：{direction}")
+    if not directions:
+        categories = [_primary_category(item) for item in items]
+        directions = [f"- {category}" for category in NEWS_CATEGORIES if category in categories] or ["- 暂无可用新闻"]
 
     lines: list[str] = [
         header,
         "",
         "今日重点",
-        f"- 重点方向：{top_category}",
-        "- 重点关注：",
-        *focus_titles,
+        "重点方向：",
+        *directions,
         "",
         "新闻列表",
     ]
 
-    grouped: dict[str, list[NewsItem]] = {category: [] for category in NEWS_CATEGORIES}
-    other_items: list[NewsItem] = []
+    grouped: dict[str, list[NewsItem | PersonalizedNewsItem]] = {category: [] for category in NEWS_CATEGORIES}
+    other_items: list[NewsItem | PersonalizedNewsItem] = []
     for item in items:
         category = _primary_category(item)
         if category in grouped:
@@ -130,31 +140,21 @@ def build_briefing(
             continue
         lines.extend(["", f"{CATEGORY_EMOJIS[category]} {category}"])
         for item in category_items:
-            title = f"【测试】{item.title}" if test_mode else item.title
-            summary = _truncate_to_two_sentences(item.summary)
-            lines.extend(
-                [
-                    f"{idx}. {title}",
-                    f"   {summary}",
-                    f"   {item.link}",
-                    "",
-                ]
-            )
+            base = _base_item(item)
+            lines.extend([f"{idx}. {_display_title(item, test_mode)}", f"   {_display_summary(item)}"])
+            if isinstance(item, PersonalizedNewsItem) and item.importance_reason:
+                lines.append(f"   关注理由：{item.importance_reason}")
+            lines.extend([f"   {base.link}", ""])
             idx += 1
 
     if other_items:
         lines.extend(["", "🗞️ 综合"])
         for item in other_items:
-            title = f"【测试】{item.title}" if test_mode else item.title
-            summary = _truncate_to_two_sentences(item.summary)
-            lines.extend(
-                [
-                    f"{idx}. {title}",
-                    f"   {summary}",
-                    f"   {item.link}",
-                    "",
-                ]
-            )
+            base = _base_item(item)
+            lines.extend([f"{idx}. {_display_title(item, test_mode)}", f"   {_display_summary(item)}"])
+            if isinstance(item, PersonalizedNewsItem) and item.importance_reason:
+                lines.append(f"   关注理由：{item.importance_reason}")
+            lines.extend([f"   {base.link}", ""])
             idx += 1
 
     if idx == 1:

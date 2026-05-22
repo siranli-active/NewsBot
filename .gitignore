@@ -3,3 +3,8 @@ demandsV2.md
 sourceDemands.md
 .env
 *.png
+.venv/
+__pycache__/
+build/
+*.egg-info/
+profile.xml
