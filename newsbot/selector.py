@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
 
-from newsbot.config import DEFAULT_FINAL_ITEMS, MIN_FINAL_CATEGORY_COUNTS, REQUIRED_FINAL_CATEGORY_COUNTS
+from newsbot.config import DEFAULT_FINAL_ITEMS, MIN_FINAL_CATEGORY_COUNTS, NEWS_CATEGORIES, REQUIRED_FINAL_CATEGORY_COUNTS
 from newsbot.models import NewsItem, PersonalizedNewsItem
 
 
@@ -39,12 +39,24 @@ def prioritize_recent(items: list[NewsItem], now: datetime | None = None) -> lis
     return recent + older + nodate
 
 
-def _has_category(item: NewsItem, category: str) -> bool:
-    return category in item.categories
-
-
 def _news_item(item: NewsItem | PersonalizedNewsItem) -> NewsItem:
     return item.item if isinstance(item, PersonalizedNewsItem) else item
+
+
+def _category_for_selection(item: NewsItem | PersonalizedNewsItem) -> str:
+    if isinstance(item, PersonalizedNewsItem) and item.display_category in NEWS_CATEGORIES:
+        return item.display_category
+    base = _news_item(item)
+    if _is_public_health_event(base):
+        return "医疗卫生"
+    for category in base.categories:
+        if category in NEWS_CATEGORIES:
+            return category
+    return "综合"
+
+
+def _has_category(item: NewsItem | PersonalizedNewsItem, category: str) -> bool:
+    return _category_for_selection(item) == category
 
 
 def _is_public_health_event(item: NewsItem) -> bool:
@@ -65,6 +77,15 @@ def _is_public_health_event(item: NewsItem) -> bool:
         "感染",
         "人畜共患",
         "公共卫生",
+        "预防医学",
+        "医疗",
+        "卫生",
+        "疾病",
+        "埃博拉",
+        "伊波拉",
+        "新冠",
+        "汉坦病毒",
+        "漢坦病毒",
     ]
     return any(keyword in text for keyword in keywords)
 
@@ -94,7 +115,7 @@ def enforce_category_requirements(
             selected_links.add(link)
 
     def best_for_category(category: str) -> list[NewsItem | PersonalizedNewsItem]:
-        ranked_matches = [item for item in ranked_items if _has_category(_news_item(item), category)]
+        ranked_matches = [item for item in ranked_items if _has_category(item, category)]
         candidate_matches = [ranked_by_link.get(item.link, item) for item in candidates if _has_category(item, category)]
         result: list[NewsItem | PersonalizedNewsItem] = []
         seen: set[str] = set()
@@ -113,8 +134,7 @@ def enforce_category_requirements(
             add(item)
 
     for item in ranked_items:
-        base = _news_item(item)
-        if any(_has_category(base, category) and _category_count(selected, category) >= count for category, count in exact_counts.items()):
+        if any(_has_category(item, category) and _category_count(selected, category) >= count for category, count in exact_counts.items()):
             continue
         add(item)
 
@@ -129,7 +149,7 @@ def enforce_category_requirements(
 
 
 def _category_count(items: list[NewsItem | PersonalizedNewsItem], category: str) -> int:
-    return sum(1 for item in items if _has_category(_news_item(item), category))
+    return sum(1 for item in items if _has_category(item, category))
 
 
 def select_items(items: list[NewsItem], max_items: int = DEFAULT_FINAL_ITEMS, now: datetime | None = None) -> list[NewsItem]:

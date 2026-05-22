@@ -72,6 +72,17 @@ def test_briefing_ignores_category_only_focus_directions() -> None:
     assert "- 财经：财经" not in text
 
 
+def test_briefing_renders_public_health_item_as_health() -> None:
+    item = _item("伊波拉疫情", "伊波拉病毒从动物传播至人类，引发公共卫生关注。", ["时政"])
+
+    text = build_briefing([item], focus_directions={"医疗卫生": ["伊波拉疫情引发公共卫生关注"]})
+
+    assert "- 医疗卫生：伊波拉疫情引发公共卫生关注" in text
+    assert "🏥 医疗卫生" in text
+    assert "🏛️ 时政" not in text
+    assert "1. 伊波拉疫情" in text
+
+
 def test_briefing_test_mode_prefix() -> None:
     items = [_item("A", "Hello world.", ["AI科技"])]
     text = build_briefing(items, test_mode=True)

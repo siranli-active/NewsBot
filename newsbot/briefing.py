@@ -4,6 +4,7 @@ from datetime import datetime
 
 from newsbot.config import NEWS_CATEGORIES
 from newsbot.models import NewsItem, PersonalizedNewsItem
+from newsbot.selector import _category_for_selection
 
 
 FALLBACK_SUMMARY = "该新闻主要内容可参考原标题与原文链接。"
@@ -44,13 +45,7 @@ def _base_item(item: NewsItem | PersonalizedNewsItem) -> NewsItem:
 
 
 def _primary_category(item: NewsItem | PersonalizedNewsItem) -> str:
-    if isinstance(item, PersonalizedNewsItem) and item.display_category in NEWS_CATEGORIES:
-        return item.display_category
-    base = _base_item(item)
-    for category in base.categories:
-        if category in NEWS_CATEGORIES:
-            return category
-    return "综合"
+    return _category_for_selection(item)
 
 
 def _truncate_chars(text: str, limit: int = 300) -> str:

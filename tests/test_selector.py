@@ -79,6 +79,17 @@ def test_health_quota_prioritizes_public_health_event() -> None:
     assert [item.title for item in out] == ["Virus outbreak alert", "Drug trial"]
 
 
+def test_health_quota_includes_public_health_event_from_politics_feed() -> None:
+    candidates = [
+        _item("Politics", "p1", 1, ["时政"]),
+        _item("伊波拉疫情", "h1", 2, ["时政"]),
+    ]
+    candidates[1].summary = "伊波拉病毒从动物传播至人类，引发公共卫生关注。"
+
+    out = enforce_category_requirements(candidates, candidates, max_items=1, min_counts={"医疗卫生": 1}, exact_counts={"医疗卫生": 1})
+
+    assert [item.title for item in out] == ["伊波拉疫情"]
+
 
 def test_enforce_category_requirements_best_effort_when_category_short() -> None:
     candidates = [
