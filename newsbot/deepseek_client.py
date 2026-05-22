@@ -81,8 +81,9 @@ def _build_prompt(profile_summary: str, candidates: list[NewsItem], final_count:
             "profile": profile_summary,
             "requirements": {
                 "final_count": final_count,
-                "categories": "最终新闻需覆盖财经、时政、AI科技、医疗卫生、自然科学；候选不足时尽量满足。",
+                "categories": "最终新闻需覆盖财经、时政、AI科技、医疗卫生、自然科学；财经、时政、AI科技候选充足时各至少 4 条，医疗卫生和自然科学候选充足时各 2 条。",
                 "minimum_counts": min_counts,
+                "public_health": "医疗卫生分类中，如果候选包含突发公共卫生事件、人畜共患病、传染病暴发、疫情预警或重大公共卫生政策变化，最终医疗卫生新闻中必须优先保留至少 1 条。",
                 "focus_directions": "返回按分类组织的对象，key 必须是财经、时政、AI科技、医疗卫生、自然科学。每个 value 必须是该分类最终入选 items 中最符合 profile 的一条具体新闻摘要，说明这条新闻本身发生了什么以及为什么值得该用户关注；不要写宽泛主题、关注方向清单或分类说明。若某分类没有最终入选新闻，不要为该分类生成 value。",
                 "display_category": "每条 item 必须给出 display_category，且只能是财经、时政、AI科技、医疗卫生、自然科学之一。医疗、公共卫生、生物医药归医疗卫生；航天、物理、基础科学、天文归自然科学；只有 AI、软件、半导体、平台、科技产业主线才归 AI科技。",
                 "translation": "英文新闻必须提供中文标题和中文摘要；中文新闻可提供压缩后的中文要点。",

@@ -47,7 +47,7 @@ def test_select_candidates_max_items() -> None:
     assert len(out) == 30
 
 
-def test_select_items_covers_categories_and_limits_health_science_to_two_each() -> None:
+def test_select_items_covers_category_quotas_and_limits_health_science_to_two_each() -> None:
     now = datetime(2026, 5, 14, 8, 0, tzinfo=timezone.utc)
     items = [
         *[_item(f"finance{i}", f"f{i}", i + 20, ["财经"]) for i in range(4)],
@@ -56,15 +56,28 @@ def test_select_items_covers_categories_and_limits_health_science_to_two_each() 
         *[_item(f"health{i}", f"h{i}", i, ["医疗卫生"]) for i in range(6)],
         *[_item(f"science{i}", f"s{i}", i + 6, ["自然科学"]) for i in range(6)],
     ]
-    out = select_items(items, max_items=15, now=now)
+    out = select_items(items, max_items=16, now=now)
 
     counts = {category: len([item for item in out if item.categories[0] == category]) for category in ["财经", "时政", "AI科技", "医疗卫生", "自然科学"]}
-    assert counts["财经"] >= 1
-    assert counts["时政"] >= 1
-    assert counts["AI科技"] >= 1
+    assert counts["财经"] >= 4
+    assert counts["时政"] >= 4
+    assert counts["AI科技"] >= 4
     assert counts["医疗卫生"] == 2
     assert counts["自然科学"] == 2
-    assert len(out) == 15
+    assert len(out) == 16
+
+
+def test_health_quota_prioritizes_public_health_event() -> None:
+    candidates = [
+        _item("Drug trial", "h1", 1, ["医疗卫生"]),
+        _item("Virus outbreak alert", "h2", 2, ["医疗卫生"]),
+        _item("Routine hospital update", "h3", 3, ["医疗卫生"]),
+    ]
+
+    out = enforce_category_requirements(candidates, candidates, max_items=2, min_counts={"医疗卫生": 2}, exact_counts={"医疗卫生": 2})
+
+    assert [item.title for item in out] == ["Virus outbreak alert", "Drug trial"]
+
 
 
 def test_enforce_category_requirements_best_effort_when_category_short() -> None:

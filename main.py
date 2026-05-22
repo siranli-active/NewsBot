@@ -16,7 +16,7 @@ from newsbot.config import (
     require_telegram_env,
 )
 from newsbot.deepseek_client import DeepSeekError, personalize_news
-from newsbot.models import PersonalizedBriefing, PersonalizedNewsItem
+from newsbot.models import NewsItem, PersonalizedBriefing, PersonalizedNewsItem
 from newsbot.profile import load_minimized_profile
 from newsbot.rss_client import fetch_all
 from newsbot.selector import enforce_category_requirements, select_candidates, select_items
@@ -37,7 +37,17 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def _build_personalized_briefing(cfg: object, candidates: list, max_items: int) -> PersonalizedBriefing | None:
+def _contains_cjk(text: str) -> bool:
+    return any("\u4e00" <= ch <= "\u9fff" for ch in text)
+
+
+def _can_render_without_translation(item: NewsItem) -> bool:
+    if not _contains_cjk(item.title):
+        return False
+    return not item.summary or _contains_cjk(item.summary)
+
+
+def _build_personalized_briefing(cfg: object, candidates: list[NewsItem], max_items: int) -> PersonalizedBriefing | None:
     api_key = getattr(cfg, "deepseek_api_key", None)
     if not api_key:
         print("DeepSeek personalization skipped: DEEPSEEK_API_KEY is not set")
@@ -65,15 +75,16 @@ def _build_personalized_briefing(cfg: object, candidates: list, max_items: int) 
         return None
 
     print(f"DeepSeek personalization used: {len(briefing.items)} items returned")
+    renderable_candidates = [item for item in candidates if _can_render_without_translation(item)]
     selected = enforce_category_requirements(
         briefing.items,
-        [item.item for item in briefing.items],
+        renderable_candidates,
         max_items=max_items,
         exact_counts=REQUIRED_FINAL_CATEGORY_COUNTS,
         min_counts=MIN_FINAL_CATEGORY_COUNTS,
     )
     return PersonalizedBriefing(
-        items=[item for item in selected if isinstance(item, PersonalizedNewsItem)],
+        items=[item if isinstance(item, PersonalizedNewsItem) else PersonalizedNewsItem(item=item) for item in selected],
         focus_directions=briefing.focus_directions,
     )
 

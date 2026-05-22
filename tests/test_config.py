@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from newsbot.config import load_config
+from newsbot.config import DEFAULT_FINAL_ITEMS, load_config
 
 
 def test_load_config_sources_only(tmp_path, monkeypatch) -> None:
@@ -32,6 +32,7 @@ sources:
     assert cfg.deepseek_api_base == "https://api.deepseek.com"
     assert cfg.deepseek_model == "deepseek-v4-flash"
     assert cfg.profile_xml_path == "profile.xml"
+    assert DEFAULT_FINAL_ITEMS == 16
 
 
 def test_load_config_deepseek_env(tmp_path, monkeypatch) -> None:

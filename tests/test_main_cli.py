@@ -84,8 +84,8 @@ def test_default_cap_15_items(mock_cfg, mock_fetch, mock_send, monkeypatch):
 
     assert rc == 0
     sent_text = mock_send.call_args.args[2]
-    assert "15." in sent_text
-    assert "16." not in sent_text
+    assert "16." in sent_text
+    assert "17." not in sent_text
 
 
 @patch("main.send_message")
@@ -102,7 +102,7 @@ def test_deepseek_called_with_30_candidates(mock_cfg, mock_fetch, mock_profile, 
     mock_fetch.return_value = _items(40)
     mock_profile.return_value = "stock_positions: MSFT: 11.77%"
     mock_personalize.return_value = PersonalizedBriefing(
-        items=[PersonalizedNewsItem(item=item) for item in _items(15)],
+        items=[PersonalizedNewsItem(item=item) for item in _items(16)],
         focus_directions={"AI科技": ["方向"]},
     )
     monkeypatch.setattr("sys.argv", ["main.py"])
@@ -115,6 +115,48 @@ def test_deepseek_called_with_30_candidates(mock_cfg, mock_fetch, mock_profile, 
     sent_text = mock_send.call_args.args[2]
     assert "- AI科技：方向" in sent_text
     assert "重点关注：" not in sent_text
+
+
+@patch("main.send_message")
+@patch("main.personalize_news")
+@patch("main.load_minimized_profile")
+@patch("main.fetch_all")
+@patch("main.load_config")
+def test_deepseek_output_fills_missing_categories_from_renderable_candidates(
+    mock_cfg, mock_fetch, mock_profile, mock_personalize, mock_send, monkeypatch
+):
+    import main
+
+    cfg = Cfg()
+    cfg.deepseek_api_key = "key"
+    mock_cfg.return_value = cfg
+    items = [
+        NewsItem(
+            title=item.title,
+            link=item.link,
+            summary="中文摘要。",
+            published_at=item.published_at,
+            categories=item.categories,
+            source=item.source,
+        )
+        for item in _mixed_items()
+    ]
+    mock_fetch.return_value = items
+    mock_profile.return_value = "stock_positions: MSFT: 11.77%"
+    mock_personalize.return_value = PersonalizedBriefing(
+        items=[PersonalizedNewsItem(item=item, translated_title=f"中文{index}", translated_summary="中文摘要。") for index, item in enumerate(items[12:16])],
+        focus_directions={"AI科技": ["中文重点"]},
+    )
+    monkeypatch.setattr("sys.argv", ["main.py"])
+    monkeypatch.setattr(main, "should_include_arxiv", lambda: False)
+
+    rc = main.run()
+
+    assert rc == 0
+    sent_text = mock_send.call_args.args[2]
+    assert "💰 财经" in sent_text
+    assert "🏛️ 时政" in sent_text
+    assert "16." in sent_text
 
 
 @patch("main.send_message")

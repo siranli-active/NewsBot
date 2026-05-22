@@ -8,9 +8,9 @@ import yaml
 
 NEWS_CATEGORIES = ["财经", "时政", "AI科技", "医疗卫生", "自然科学"]
 DEFAULT_CANDIDATE_ITEMS = 30
-DEFAULT_FINAL_ITEMS = 15
+DEFAULT_FINAL_ITEMS = 16
 REQUIRED_FINAL_CATEGORY_COUNTS = {"医疗卫生": 2, "自然科学": 2}
-MIN_FINAL_CATEGORY_COUNTS = {"财经": 1, "时政": 1, "AI科技": 1, "医疗卫生": 2, "自然科学": 2}
+MIN_FINAL_CATEGORY_COUNTS = {"财经": 4, "时政": 4, "AI科技": 4, "医疗卫生": 2, "自然科学": 2}
 DEFAULT_DEEPSEEK_API_BASE = "https://api.deepseek.com"
 DEFAULT_DEEPSEEK_MODEL = "deepseek-v4-flash"
 DEFAULT_PROFILE_XML_PATH = "profile.xml"

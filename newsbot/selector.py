@@ -47,6 +47,28 @@ def _news_item(item: NewsItem | PersonalizedNewsItem) -> NewsItem:
     return item.item if isinstance(item, PersonalizedNewsItem) else item
 
 
+def _is_public_health_event(item: NewsItem) -> bool:
+    text = f"{item.title} {item.summary}".lower()
+    keywords = [
+        "outbreak",
+        "epidemic",
+        "pandemic",
+        "infection",
+        "virus",
+        "zoonotic",
+        "public health",
+        "疫情",
+        "暴发",
+        "爆发",
+        "传染病",
+        "病毒",
+        "感染",
+        "人畜共患",
+        "公共卫生",
+    ]
+    return any(keyword in text for keyword in keywords)
+
+
 def select_candidates(items: list[NewsItem], max_items: int = 30, now: datetime | None = None) -> list[NewsItem]:
     return prioritize_recent(deduplicate(items), now=now)[:max_items]
 
@@ -81,6 +103,8 @@ def enforce_category_requirements(
             if link not in seen:
                 result.append(item)
                 seen.add(link)
+        if category == "医疗卫生":
+            result.sort(key=lambda item: not _is_public_health_event(_news_item(item)))
         return result
 
     for category, count in min_counts.items():

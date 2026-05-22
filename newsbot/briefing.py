@@ -97,6 +97,18 @@ def _display_summary(item: NewsItem | PersonalizedNewsItem) -> str:
     return _truncate_to_two_sentences(summary)
 
 
+def _fallback_focus_directions(items: list[NewsItem | PersonalizedNewsItem]) -> list[str]:
+    directions: list[str] = []
+    seen: set[str] = set()
+    for item in items:
+        category = _primary_category(item)
+        if category not in NEWS_CATEGORIES or category in seen:
+            continue
+        seen.add(category)
+        directions.append(f"- {category}：{_display_summary(item)}")
+    return directions or ["- 暂无可用新闻"]
+
+
 def build_briefing(
     items: list[NewsItem | PersonalizedNewsItem],
     test_mode: bool = False,
@@ -109,10 +121,11 @@ def build_briefing(
     directions = []
     for category in NEWS_CATEGORIES:
         for direction in (focus_directions or {}).get(category, []):
-            directions.append(f"- {category}：{direction}")
+            text = direction.strip()
+            if text and text != category:
+                directions.append(f"- {category}：{text}")
     if not directions:
-        categories = [_primary_category(item) for item in items]
-        directions = [f"- {category}" for category in NEWS_CATEGORIES if category in categories] or ["- 暂无可用新闻"]
+        directions = _fallback_focus_directions(items)
 
     lines: list[str] = [
         header,

@@ -26,8 +26,8 @@ def test_briefing_focus_and_sections() -> None:
     text = build_briefing(items)
     assert "重点方向：" in text
     assert "重点关注：" not in text
-    assert "- 财经" in text
-    assert "- AI科技" in text
+    assert "- 财经：" in text
+    assert "- AI科技：" in text
     assert "💰 财经" in text
     assert "🤖 AI科技" in text
     assert "🏛️ 时政" not in text
@@ -58,6 +58,18 @@ def test_briefing_personalized_fields() -> None:
     assert "1. 中文标题" in text
     assert "中文摘要。" in text
     assert "关注理由：与持仓相关" in text
+
+
+def test_briefing_ignores_category_only_focus_directions() -> None:
+    item = PersonalizedNewsItem(
+        item=_item("A", "具体新闻摘要。", ["财经"]),
+        display_category="财经",
+    )
+
+    text = build_briefing([item], focus_directions={"财经": ["财经"]})
+
+    assert "- 财经：具体新闻摘要。" in text
+    assert "- 财经：财经" not in text
 
 
 def test_briefing_test_mode_prefix() -> None:

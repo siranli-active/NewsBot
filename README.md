@@ -8,8 +8,8 @@
 - 使用 `feedparser` 抓取新闻
 - 按标题+链接去重
 - 优先保留最近 24 小时新闻；无发布时间新闻保留但排后
-- 默认收集 30 条普通新闻候选，再输出最多 15 条最终新闻
-- 最终新闻尽量覆盖财经、时政、AI科技、医疗卫生、自然科学五类，其中医疗卫生和自然科学在候选充足时各 2 条
+- 默认收集 30 条普通新闻候选，再输出最多 16 条最终新闻
+- 最终新闻尽量覆盖财经、时政、AI科技、医疗卫生、自然科学五类，其中财经、时政、AI科技在候选充足时各至少 4 条，医疗卫生和自然科学在候选充足时各 2 条
 - 配置 DeepSeek 后，根据 `profile.xml` 的最小化画像筛选重要新闻、翻译英文新闻、生成按分类组织的重点方向
 - 未配置 DeepSeek 时，自动使用本地规则 fallback 生成中文简报
 - 发送到 Telegram Bot
@@ -69,7 +69,7 @@ GitHub Actions 里请在仓库 `Settings -> Secrets and variables -> Actions` �
 ```bash
 python main.py --dry-run
 python main.py --test
-python main.py --max-items 15
+python main.py --max-items 16
 python main.py --candidate-items 30
 ```
 
