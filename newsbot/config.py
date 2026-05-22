@@ -12,7 +12,7 @@ DEFAULT_FINAL_ITEMS = 15
 REQUIRED_FINAL_CATEGORY_COUNTS = {"医疗卫生": 2, "自然科学": 2}
 MIN_FINAL_CATEGORY_COUNTS = {"财经": 1, "时政": 1, "AI科技": 1, "医疗卫生": 2, "自然科学": 2}
 DEFAULT_DEEPSEEK_API_BASE = "https://api.deepseek.com"
-DEFAULT_DEEPSEEK_MODEL = "deepseek-chat"
+DEFAULT_DEEPSEEK_MODEL = "deepseek-v4-flash"
 DEFAULT_PROFILE_XML_PATH = "profile.xml"
 
 

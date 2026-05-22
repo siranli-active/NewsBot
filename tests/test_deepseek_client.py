@@ -66,7 +66,12 @@ def test_personalize_news_maps_json_response(mock_post: Mock) -> None:
     assert briefing.items[0].translated_title == "中文标题"
     call = mock_post.call_args
     assert call.kwargs["headers"]["Authorization"] == "Bearer secret-key"
-    prompt = call.kwargs["json"]["messages"][1]["content"]
+    payload = call.kwargs["json"]
+    assert payload["model"] == "deepseek-chat"
+    assert payload["reasoning_effort"] == "high"
+    assert payload["thinking"] == {"type": "enabled"}
+    assert "temperature" not in payload
+    prompt = payload["messages"][1]["content"]
     assert "stock_positions" in prompt
     assert "display_category" in prompt
     assert "最符合 profile 的一条具体新闻摘要" in prompt

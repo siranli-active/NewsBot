@@ -49,7 +49,7 @@ DeepSeek 个性化筛选可选：
 
 - `DEEPSEEK_API_KEY`
 - `DEEPSEEK_API_BASE`：可选，默认使用 DeepSeek OpenAI-compatible API base
-- `DEEPSEEK_MODEL`：可选，默认 `deepseek-chat`
+- `DEEPSEEK_MODEL`：可选，默认 `deepseek-v4-flash`
 - `PROFILE_XML_PATH`：可选，默认 `profile.xml`
 
 本地可在 shell 中设置：

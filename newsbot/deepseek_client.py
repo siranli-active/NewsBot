@@ -34,7 +34,8 @@ def personalize_news(
                 "content": _build_prompt(profile_summary, candidates, final_count, min_counts),
             },
         ],
-        "temperature": 0.2,
+        "reasoning_effort": "high",
+        "thinking": {"type": "enabled"},
         "response_format": {"type": "json_object"},
     }
     try:

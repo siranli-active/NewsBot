@@ -30,7 +30,7 @@ sources:
     assert cfg.arxiv_sources == []
     assert cfg.deepseek_api_key is None
     assert cfg.deepseek_api_base == "https://api.deepseek.com"
-    assert cfg.deepseek_model == "deepseek-chat"
+    assert cfg.deepseek_model == "deepseek-v4-flash"
     assert cfg.profile_xml_path == "profile.xml"
 
 
