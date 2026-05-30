@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 from unittest.mock import patch
 
@@ -243,7 +243,7 @@ def test_arxiv_sources_included(mock_cfg, mock_fetch, mock_fetch_arxiv, mock_sen
             title="Active matter paper",
             link="https://arxiv.org/abs/2605.00001",
             summary="Abstract",
-            published_at=datetime(2026, 5, 21, 8, 0, tzinfo=timezone.utc),
+            published_at=datetime.now(timezone.utc) - timedelta(days=1),
             categories=["cond-mat.soft"],
             source="arXiv Active Matter",
             authors=["Author One", "Author Two"],
