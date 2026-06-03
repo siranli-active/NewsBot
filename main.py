@@ -5,7 +5,7 @@ import xml.etree.ElementTree as ET
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
-from newsbot.arxiv_client import fetch_all_arxiv, select_latest_arxiv
+from newsbot.arxiv_client import ArxivFetchError, fetch_all_arxiv, select_latest_arxiv
 from newsbot.briefing import build_briefing
 from newsbot.config import (
     DEFAULT_CANDIDATE_ITEMS,
@@ -107,8 +107,11 @@ def run() -> int:
     arxiv_selected = None
     if should_include_arxiv():
         arxiv_sources = getattr(cfg, "arxiv_sources", [])
-        arxiv_items = fetch_all_arxiv(arxiv_sources) if arxiv_sources else []
-        arxiv_selected = select_latest_arxiv(arxiv_items, max_items=5)
+        try:
+            arxiv_items = fetch_all_arxiv(arxiv_sources) if arxiv_sources else []
+            arxiv_selected = select_latest_arxiv(arxiv_items, max_items=5)
+        except ArxivFetchError as exc:
+            arxiv_selected = str(exc)
 
     message = build_briefing(
         selected,

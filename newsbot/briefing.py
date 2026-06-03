@@ -61,8 +61,11 @@ def _format_authors(authors: list[str] | None) -> str:
     return ", ".join(authors[:2])
 
 
-def _append_arxiv_section(lines: list[str], papers: list[NewsItem], test_mode: bool) -> None:
+def _append_arxiv_section(lines: list[str], papers: list[NewsItem] | str, test_mode: bool) -> None:
     lines.extend(["", "📚 每周 arXiv / Active Matter 论文", ""])
+    if isinstance(papers, str):
+        lines.append(f"arXiv active matter 论文检索失败：{papers}")
+        return
     if not papers:
         lines.append("过去一周内没有检索到 active matter 相关 arXiv 论文。")
         return
@@ -107,7 +110,7 @@ def _fallback_focus_directions(items: list[NewsItem | PersonalizedNewsItem]) -> 
 def build_briefing(
     items: list[NewsItem | PersonalizedNewsItem],
     test_mode: bool = False,
-    arxiv_papers: list[NewsItem] | None = None,
+    arxiv_papers: list[NewsItem] | str | None = None,
     focus_directions: dict[str, list[str]] | None = None,
 ) -> str:
     date_text = datetime.now().strftime("%Y-%m-%d")

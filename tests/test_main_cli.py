@@ -4,6 +4,7 @@ from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 from unittest.mock import patch
 
+from newsbot.arxiv_client import ArxivFetchError
 from newsbot.config import ArxivSource
 from newsbot.models import NewsItem, PersonalizedBriefing, PersonalizedNewsItem
 
@@ -259,6 +260,36 @@ def test_arxiv_sources_included(mock_cfg, mock_fetch, mock_fetch_arxiv, mock_sen
     sent_text = mock_send.call_args.args[2]
     assert "📚 每周 arXiv / Active Matter 论文" in sent_text
     assert "Active matter paper" in sent_text
+
+
+@patch("main.send_message")
+@patch("main.fetch_all_arxiv")
+@patch("main.fetch_all")
+@patch("main.load_config")
+def test_arxiv_fetch_error_is_included_in_briefing(mock_cfg, mock_fetch, mock_fetch_arxiv, mock_send, monkeypatch):
+    import main
+
+    class ArxivCfg(Cfg):
+        arxiv_sources = [
+            ArxivSource(
+                name="arXiv Active Matter",
+                keywords=["active matter"],
+                categories=["cond-mat.soft"],
+            )
+        ]
+
+    mock_cfg.return_value = ArxivCfg()
+    mock_fetch.return_value = []
+    mock_fetch_arxiv.side_effect = ArxivFetchError("arXiv API returned HTTP 429")
+    monkeypatch.setattr("sys.argv", ["main.py"])
+    monkeypatch.setattr(main, "should_include_arxiv", lambda: True)
+
+    rc = main.run()
+
+    assert rc == 0
+    sent_text = mock_send.call_args.args[2]
+    assert "📚 每周 arXiv / Active Matter 论文" in sent_text
+    assert "arXiv active matter 论文检索失败：arXiv API returned HTTP 429" in sent_text
 
 
 @patch("main.send_message")

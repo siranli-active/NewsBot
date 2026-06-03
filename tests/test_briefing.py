@@ -114,3 +114,8 @@ def test_briefing_arxiv_section() -> None:
 def test_briefing_arxiv_empty_state() -> None:
     text = build_briefing([], arxiv_papers=[])
     assert "过去一周内没有检索到 active matter 相关 arXiv 论文。" in text
+
+
+def test_briefing_arxiv_error_state() -> None:
+    text = build_briefing([], arxiv_papers="arXiv API returned HTTP 429")
+    assert "arXiv active matter 论文检索失败：arXiv API returned HTTP 429" in text
